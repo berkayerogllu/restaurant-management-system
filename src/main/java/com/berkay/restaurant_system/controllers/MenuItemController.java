@@ -2,6 +2,7 @@ package com.berkay.restaurant_system.controllers;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,25 +35,19 @@ public class MenuItemController {
     // Retrieve a single menu item by its ID
     @GetMapping("/{id}")
     public ResponseEntity<MenuItem> getMenuItemById(@PathVariable Long id) {
-        return menuItemService.getMenuItemById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(menuItemService.getMenuItemById(id));
     }
 
     // Create a new menu item
     @PostMapping
     public ResponseEntity<MenuItem> addMenuItem(@RequestBody MenuItem menuItem) {
-        return ResponseEntity.ok(menuItemService.addMenuItem(menuItem));
+        return new ResponseEntity<>(menuItemService.addMenuItem(menuItem), HttpStatus.CREATED);
     }
 
     // Update an existing menu item
     @PutMapping("/{id}")
     public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id, @RequestBody MenuItem menuItem) {
-        try {
-            return ResponseEntity.ok(menuItemService.updateMenuItem(id, menuItem));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(menuItemService.updateMenuItem(id, menuItem));
     }
 
     // Delete a menu item
