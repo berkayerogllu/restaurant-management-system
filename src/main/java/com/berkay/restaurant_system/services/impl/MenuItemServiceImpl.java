@@ -1,11 +1,11 @@
 package com.berkay.restaurant_system.services.impl;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.berkay.restaurant_system.entities.MenuItem;
+import com.berkay.restaurant_system.exceptions.ResourceNotFoundException;
 import com.berkay.restaurant_system.repositories.MenuItemRepository;
 import com.berkay.restaurant_system.services.MenuItemService;
 
@@ -24,8 +24,9 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    public Optional<MenuItem> getMenuItemById(Long id) {
-        return menuItemRepository.findById(id);
+    public MenuItem getMenuItemById(Long id) {
+        return menuItemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("MenuItem", "id", id));
     }
 
     @Override
@@ -35,15 +36,18 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItem updateMenuItem(Long id, MenuItem menuItem) {
-        if (menuItemRepository.existsById(id)) {
-            menuItem.setId(id);
-            return menuItemRepository.save(menuItem);
-        }
-        throw new RuntimeException("Menu Item not found with id: " + id);
+        MenuItem existingItem = menuItemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("MenuItem", "id", id));
+        
+        menuItem.setId(existingItem.getId());
+        return menuItemRepository.save(menuItem);
     }
 
     @Override
     public void deleteMenuItem(Long id) {
-        menuItemRepository.deleteById(id);
+        MenuItem existingItem = menuItemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("MenuItem", "id", id));
+                
+        menuItemRepository.delete(existingItem);
     }
 }

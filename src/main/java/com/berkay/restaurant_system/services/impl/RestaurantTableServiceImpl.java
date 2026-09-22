@@ -1,11 +1,11 @@
 package com.berkay.restaurant_system.services.impl;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.berkay.restaurant_system.entities.RestaurantTable;
+import com.berkay.restaurant_system.exceptions.ResourceNotFoundException;
 import com.berkay.restaurant_system.repositories.RestaurantTableRepository;
 import com.berkay.restaurant_system.services.RestaurantTableService;
 
@@ -24,8 +24,9 @@ public class RestaurantTableServiceImpl implements RestaurantTableService {
     }
 
     @Override
-    public Optional<RestaurantTable> getTableById(Long id) {
-        return restaurantTableRepository.findById(id);
+    public RestaurantTable getTableById(Long id) {
+        return restaurantTableRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("RestaurantTable", "id", id));
     }
 
     @Override
@@ -35,15 +36,18 @@ public class RestaurantTableServiceImpl implements RestaurantTableService {
 
     @Override
     public RestaurantTable updateTable(Long id, RestaurantTable restaurantTable) {
-        if (restaurantTableRepository.existsById(id)) {
-            restaurantTable.setId(id);
-            return restaurantTableRepository.save(restaurantTable);
-        }
-        throw new RuntimeException("Table not found with id: " + id);
+        RestaurantTable existingTable = restaurantTableRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("RestaurantTable", "id", id));
+        
+        restaurantTable.setId(existingTable.getId());
+        return restaurantTableRepository.save(restaurantTable);
     }
 
     @Override
     public void deleteTable(Long id) {
-        restaurantTableRepository.deleteById(id);
+        RestaurantTable existingTable = restaurantTableRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("RestaurantTable", "id", id));
+                
+        restaurantTableRepository.delete(existingTable);
     }
 }

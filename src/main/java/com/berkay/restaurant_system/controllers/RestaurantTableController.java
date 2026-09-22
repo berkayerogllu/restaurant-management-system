@@ -2,6 +2,7 @@ package com.berkay.restaurant_system.controllers;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,25 +35,19 @@ public class RestaurantTableController {
     // Retrieve a single table by its ID
     @GetMapping("/{id}")
     public ResponseEntity<RestaurantTable> getTableById(@PathVariable Long id) {
-        return restaurantTableService.getTableById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(restaurantTableService.getTableById(id));
     }
 
     // Add a new table to the restaurant
     @PostMapping
     public ResponseEntity<RestaurantTable> addTable(@RequestBody RestaurantTable restaurantTable) {
-        return ResponseEntity.ok(restaurantTableService.addTable(restaurantTable));
+        return new ResponseEntity<>(restaurantTableService.addTable(restaurantTable), HttpStatus.CREATED);
     }
 
     // Update an existing table's details
     @PutMapping("/{id}")
     public ResponseEntity<RestaurantTable> updateTable(@PathVariable Long id, @RequestBody RestaurantTable restaurantTable) {
-        try {
-            return ResponseEntity.ok(restaurantTableService.updateTable(id, restaurantTable));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(restaurantTableService.updateTable(id, restaurantTable));
     }
 
     // Delete a table

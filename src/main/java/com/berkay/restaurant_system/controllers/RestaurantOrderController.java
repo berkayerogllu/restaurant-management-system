@@ -2,6 +2,7 @@ package com.berkay.restaurant_system.controllers;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,30 +35,19 @@ public class RestaurantOrderController {
     // Retrieve a specific order by ID
     @GetMapping("/{id}")
     public ResponseEntity<RestaurantOrder> getOrderById(@PathVariable Long id) {
-        return restaurantOrderService.getOrderById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(restaurantOrderService.getOrderById(id));
     }
 
     // Place a new order
     @PostMapping
     public ResponseEntity<RestaurantOrder> addOrder(@RequestBody RestaurantOrder order) {
-        try {
-            return ResponseEntity.ok(restaurantOrderService.addOrder(order));
-        } catch (RuntimeException e) {
-            // Bad request if the associated table does not exist
-            return ResponseEntity.badRequest().build(); 
-        }
+        return new ResponseEntity<>(restaurantOrderService.addOrder(order), HttpStatus.CREATED);
     }
 
     // Update an existing order
     @PutMapping("/{id}")
     public ResponseEntity<RestaurantOrder> updateOrder(@PathVariable Long id, @RequestBody RestaurantOrder order) {
-        try {
-            return ResponseEntity.ok(restaurantOrderService.updateOrder(id, order));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(restaurantOrderService.updateOrder(id, order));
     }
 
     // Cancel or delete an order
