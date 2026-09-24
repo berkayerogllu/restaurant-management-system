@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.berkay.restaurant_system.entities.RestaurantOrder;
+import com.berkay.restaurant_system.dtos.RestaurantOrderDto;
 import com.berkay.restaurant_system.services.RestaurantOrderService;
 
 @RestController
@@ -26,31 +26,26 @@ public class RestaurantOrderController {
         this.restaurantOrderService = restaurantOrderService;
     }
 
-    // Retrieve all orders
     @GetMapping
-    public ResponseEntity<List<RestaurantOrder>> getAllOrders() {
+    public ResponseEntity<List<RestaurantOrderDto>> getAllOrders() {
         return ResponseEntity.ok(restaurantOrderService.getAllOrders());
     }
 
-    // Retrieve a specific order by ID
     @GetMapping("/{id}")
-    public ResponseEntity<RestaurantOrder> getOrderById(@PathVariable Long id) {
+    public ResponseEntity<RestaurantOrderDto> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(restaurantOrderService.getOrderById(id));
     }
 
-    // Place a new order
     @PostMapping
-    public ResponseEntity<RestaurantOrder> addOrder(@RequestBody RestaurantOrder order) {
-        return new ResponseEntity<>(restaurantOrderService.addOrder(order), HttpStatus.CREATED);
+    public ResponseEntity<RestaurantOrderDto> addOrder(@RequestBody RestaurantOrderDto orderDto) {
+        return new ResponseEntity<>(restaurantOrderService.addOrder(orderDto), HttpStatus.CREATED);
     }
 
-    // Update an existing order
     @PutMapping("/{id}")
-    public ResponseEntity<RestaurantOrder> updateOrder(@PathVariable Long id, @RequestBody RestaurantOrder order) {
-        return ResponseEntity.ok(restaurantOrderService.updateOrder(id, order));
+    public ResponseEntity<RestaurantOrderDto> updateOrder(@PathVariable Long id, @RequestBody RestaurantOrderDto orderDto) {
+        return ResponseEntity.ok(restaurantOrderService.updateOrder(id, orderDto));
     }
 
-    // Cancel or delete an order
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
         restaurantOrderService.deleteOrder(id);

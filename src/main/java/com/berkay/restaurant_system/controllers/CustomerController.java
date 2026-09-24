@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.berkay.restaurant_system.entities.Customer;
+import com.berkay.restaurant_system.dtos.CustomerDto;
 import com.berkay.restaurant_system.services.CustomerService;
 
 @RestController
@@ -26,31 +26,26 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
-    // Retrieve all registered customers
     @GetMapping
-    public ResponseEntity<List<Customer>> getAllCustomers() {
+    public ResponseEntity<List<CustomerDto>> getAllCustomers() {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
 
-    // Retrieve a specific customer by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
+    public ResponseEntity<CustomerDto> getCustomerById(@PathVariable Long id) {
         return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
-    // Register a new customer
     @PostMapping
-    public ResponseEntity<Customer> addCustomer(@RequestBody Customer customer) {
-        return new ResponseEntity<>(customerService.addCustomer(customer), HttpStatus.CREATED);
+    public ResponseEntity<CustomerDto> addCustomer(@RequestBody CustomerDto customerDto) {
+        return new ResponseEntity<>(customerService.addCustomer(customerDto), HttpStatus.CREATED);
     }
 
-    // Update customer details
     @PutMapping("/{id}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer customer) {
-        return ResponseEntity.ok(customerService.updateCustomer(id, customer));
+    public ResponseEntity<CustomerDto> updateCustomer(@PathVariable Long id, @RequestBody CustomerDto customerDto) {
+        return ResponseEntity.ok(customerService.updateCustomer(id, customerDto));
     }
 
-    // Delete a customer profile
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);

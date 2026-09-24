@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.berkay.restaurant_system.entities.RestaurantTable;
+import com.berkay.restaurant_system.dtos.RestaurantTableDto;
 import com.berkay.restaurant_system.services.RestaurantTableService;
 
 @RestController
@@ -26,31 +26,26 @@ public class RestaurantTableController {
         this.restaurantTableService = restaurantTableService;
     }
 
-    // Retrieve all restaurant tables
     @GetMapping
-    public ResponseEntity<List<RestaurantTable>> getAllTables() {
+    public ResponseEntity<List<RestaurantTableDto>> getAllTables() {
         return ResponseEntity.ok(restaurantTableService.getAllTables());
     }
 
-    // Retrieve a single table by its ID
     @GetMapping("/{id}")
-    public ResponseEntity<RestaurantTable> getTableById(@PathVariable Long id) {
+    public ResponseEntity<RestaurantTableDto> getTableById(@PathVariable Long id) {
         return ResponseEntity.ok(restaurantTableService.getTableById(id));
     }
 
-    // Add a new table to the restaurant
     @PostMapping
-    public ResponseEntity<RestaurantTable> addTable(@RequestBody RestaurantTable restaurantTable) {
-        return new ResponseEntity<>(restaurantTableService.addTable(restaurantTable), HttpStatus.CREATED);
+    public ResponseEntity<RestaurantTableDto> addTable(@RequestBody RestaurantTableDto restaurantTableDto) {
+        return new ResponseEntity<>(restaurantTableService.addTable(restaurantTableDto), HttpStatus.CREATED);
     }
 
-    // Update an existing table's details
     @PutMapping("/{id}")
-    public ResponseEntity<RestaurantTable> updateTable(@PathVariable Long id, @RequestBody RestaurantTable restaurantTable) {
-        return ResponseEntity.ok(restaurantTableService.updateTable(id, restaurantTable));
+    public ResponseEntity<RestaurantTableDto> updateTable(@PathVariable Long id, @RequestBody RestaurantTableDto restaurantTableDto) {
+        return ResponseEntity.ok(restaurantTableService.updateTable(id, restaurantTableDto));
     }
 
-    // Delete a table
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTable(@PathVariable Long id) {
         restaurantTableService.deleteTable(id);

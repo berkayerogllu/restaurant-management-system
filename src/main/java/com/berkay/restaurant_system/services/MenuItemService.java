@@ -2,12 +2,12 @@ package com.berkay.restaurant_system.services;
 
 import java.util.List;
 
-import com.berkay.restaurant_system.entities.MenuItem;
+import com.berkay.restaurant_system.dtos.MenuItemDto;
 
 public interface MenuItemService {
-    List<MenuItem> getAllMenuItems();
-    MenuItem getMenuItemById(Long id);
-    MenuItem addMenuItem(MenuItem menuItem);
-    MenuItem updateMenuItem(Long id, MenuItem menuItem);
+    List<MenuItemDto> getAllMenuItems();
+    MenuItemDto getMenuItemById(Long id);
+    MenuItemDto addMenuItem(MenuItemDto menuItemDto);
+    MenuItemDto updateMenuItem(Long id, MenuItemDto menuItemDto);
     void deleteMenuItem(Long id);
 }
