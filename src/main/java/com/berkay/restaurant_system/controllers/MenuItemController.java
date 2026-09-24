@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.berkay.restaurant_system.entities.MenuItem;
+import com.berkay.restaurant_system.dtos.MenuItemDto;
 import com.berkay.restaurant_system.services.MenuItemService;
 
 @RestController
@@ -26,31 +26,26 @@ public class MenuItemController {
         this.menuItemService = menuItemService;
     }
 
-    // Retrieve all menu items
     @GetMapping
-    public ResponseEntity<List<MenuItem>> getAllMenuItems() {
+    public ResponseEntity<List<MenuItemDto>> getAllMenuItems() {
         return ResponseEntity.ok(menuItemService.getAllMenuItems());
     }
 
-    // Retrieve a single menu item by its ID
     @GetMapping("/{id}")
-    public ResponseEntity<MenuItem> getMenuItemById(@PathVariable Long id) {
+    public ResponseEntity<MenuItemDto> getMenuItemById(@PathVariable Long id) {
         return ResponseEntity.ok(menuItemService.getMenuItemById(id));
     }
 
-    // Create a new menu item
     @PostMapping
-    public ResponseEntity<MenuItem> addMenuItem(@RequestBody MenuItem menuItem) {
-        return new ResponseEntity<>(menuItemService.addMenuItem(menuItem), HttpStatus.CREATED);
+    public ResponseEntity<MenuItemDto> addMenuItem(@RequestBody MenuItemDto menuItemDto) {
+        return new ResponseEntity<>(menuItemService.addMenuItem(menuItemDto), HttpStatus.CREATED);
     }
 
-    // Update an existing menu item
     @PutMapping("/{id}")
-    public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id, @RequestBody MenuItem menuItem) {
-        return ResponseEntity.ok(menuItemService.updateMenuItem(id, menuItem));
+    public ResponseEntity<MenuItemDto> updateMenuItem(@PathVariable Long id, @RequestBody MenuItemDto menuItemDto) {
+        return ResponseEntity.ok(menuItemService.updateMenuItem(id, menuItemDto));
     }
 
-    // Delete a menu item
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {
         menuItemService.deleteMenuItem(id);

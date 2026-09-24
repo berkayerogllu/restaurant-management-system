@@ -1,12 +1,15 @@
 package com.berkay.restaurant_system.services.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.berkay.restaurant_system.dtos.RestaurantOrderDto;
 import com.berkay.restaurant_system.entities.RestaurantOrder;
 import com.berkay.restaurant_system.exceptions.BadRequestException;
 import com.berkay.restaurant_system.exceptions.ResourceNotFoundException;
+import com.berkay.restaurant_system.mappers.RestaurantOrderMapper;
 import com.berkay.restaurant_system.repositories.RestaurantOrderRepository;
 import com.berkay.restaurant_system.repositories.RestaurantTableRepository;
 import com.berkay.restaurant_system.services.RestaurantOrderService;
@@ -23,38 +26,60 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
     }
 
     @Override
-    public List<RestaurantOrder> getAllOrders() {
-        return restaurantOrderRepository.findAll();
+    public List<RestaurantOrderDto> getAllOrders() {
+        List<RestaurantOrder> orders = restaurantOrderRepository.findAll();
+        return orders.stream()
+                .map(RestaurantOrderMapper::mapToRestaurantOrderDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public RestaurantOrder getOrderById(Long id) {
-        return restaurantOrderRepository.findById(id)
+    public RestaurantOrderDto getOrderById(Long id) {
+        RestaurantOrder order = restaurantOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RestaurantOrder", "id", id));
+        return RestaurantOrderMapper.mapToRestaurantOrderDto(order);
     }
 
     @Override
-    public RestaurantOrder addOrder(RestaurantOrder order) {
-        // Check if the assigned table exists in the database
-        if (order.getRestaurantTable() == null || order.getRestaurantTable().getId() == null) {
-            throw new BadRequestException("Order must be assigned to a valid restaurant table.");
+    public RestaurantOrderDto addOrder(RestaurantOrderDto orderDto) {
+        if (orderDto.getTableId() == null) {
+            throw new BadRequestException("Order must be assigned to a valid restaurant table id.");
         }
         
-        boolean tableExists = restaurantTableRepository.existsById(order.getRestaurantTable().getId());
+        boolean tableExists = restaurantTableRepository.existsById(orderDto.getTableId());
         if (!tableExists) {
-            throw new BadRequestException("Assigned table does not exist with id: " + order.getRestaurantTable().getId());
+            throw new BadRequestException("Assigned table does not exist with id: " + orderDto.getTableId());
         }
         
-        return restaurantOrderRepository.save(order);
+        RestaurantOrder order = RestaurantOrderMapper.mapToRestaurantOrder(orderDto);
+        RestaurantOrder savedOrder = restaurantOrderRepository.save(order);
+        return RestaurantOrderMapper.mapToRestaurantOrderDto(savedOrder);
     }
 
     @Override
-    public RestaurantOrder updateOrder(Long id, RestaurantOrder order) {
+    public RestaurantOrderDto updateOrder(Long id, RestaurantOrderDto orderDto) {
         RestaurantOrder existingOrder = restaurantOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RestaurantOrder", "id", id));
         
-        order.setId(existingOrder.getId());
-        return restaurantOrderRepository.save(order);
+        if (orderDto.getTableId() != null) {
+            boolean tableExists = restaurantTableRepository.existsById(orderDto.getTableId());
+            if (!tableExists) {
+                throw new BadRequestException("Assigned table does not exist with id: " + orderDto.getTableId());
+            }
+        }
+        
+        RestaurantOrder mappedOrder = RestaurantOrderMapper.mapToRestaurantOrder(orderDto);
+        existingOrder.setDetails(mappedOrder.getDetails());
+        existingOrder.setTotalPrice(mappedOrder.getTotalPrice());
+        
+        existingOrder.setPaid(mappedOrder.isPaid()); 
+        
+        if(mappedOrder.getRestaurantTable() != null) {
+             existingOrder.setRestaurantTable(mappedOrder.getRestaurantTable());
+        }
+        
+        RestaurantOrder updatedOrder = restaurantOrderRepository.save(existingOrder);
+        return RestaurantOrderMapper.mapToRestaurantOrderDto(updatedOrder);
     }
 
     @Override
