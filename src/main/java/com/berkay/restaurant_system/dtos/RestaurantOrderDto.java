@@ -23,6 +23,9 @@ public class RestaurantOrderDto {
     // Set by the server on creation and only changed through the status transition endpoint
     private String status;
 
+    // Populated on responses only when the order was cancelled, via the status transition endpoint
+    private String cancellationReason;
+
     private Long tableId;
 
     @Valid

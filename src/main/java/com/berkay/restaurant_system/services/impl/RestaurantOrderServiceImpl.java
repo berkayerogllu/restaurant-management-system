@@ -1,5 +1,6 @@
 package com.berkay.restaurant_system.services.impl;
 
+import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
@@ -77,6 +78,7 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
 
         RestaurantOrder order = RestaurantOrderMapper.mapToRestaurantOrder(orderDto);
         order.setStatus(OrderStatus.RECEIVED);
+        order.setCreatedAt(LocalDateTime.now());
 
         List<OrderItem> orderItems = resolveOrderItems(orderDto.getItems(), order, true);
         order.setOrderItems(orderItems);
@@ -119,7 +121,7 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
     }
 
     @Override
-    public RestaurantOrderDto updateOrderStatus(Long id, String newStatusValue) {
+    public RestaurantOrderDto updateOrderStatus(Long id, String newStatusValue, String reason) {
         RestaurantOrder existingOrder = restaurantOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RestaurantOrder", "id", id));
 
@@ -129,6 +131,13 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
         if (!ALLOWED_TRANSITIONS.get(currentStatus).contains(newStatus)) {
             throw new BadRequestException(
                     "Cannot transition order from " + currentStatus + " to " + newStatus + ".");
+        }
+
+        if (newStatus == OrderStatus.CANCELLED) {
+            if (reason == null || reason.isBlank()) {
+                throw new BadRequestException("A cancellation reason is required when cancelling an order.");
+            }
+            existingOrder.setCancellationReason(reason);
         }
 
         existingOrder.setStatus(newStatus);
@@ -142,6 +151,28 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("RestaurantOrder", "id", id));
 
         restaurantOrderRepository.delete(existingOrder);
+    }
+
+    @Override
+    public List<RestaurantOrderDto> getKitchenQueue() {
+        List<OrderStatus> kitchenStatuses = List.of(OrderStatus.RECEIVED, OrderStatus.IN_PREPARATION);
+        return restaurantOrderRepository.findByStatusInOrderByCreatedAtAsc(kitchenStatuses).stream()
+                .map(RestaurantOrderMapper::mapToRestaurantOrderDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public RestaurantOrderDto getActiveOrderForTable(Long tableId) {
+        if (!restaurantTableRepository.existsById(tableId)) {
+            throw new ResourceNotFoundException("RestaurantTable", "id", tableId);
+        }
+
+        List<OrderStatus> finishedStatuses = List.of(OrderStatus.PAID, OrderStatus.CANCELLED);
+        RestaurantOrder activeOrder = restaurantOrderRepository
+                .findFirstByRestaurantTableIdAndStatusNotInOrderByCreatedAtDesc(tableId, finishedStatuses)
+                .orElseThrow(() -> new ResourceNotFoundException("Active order for table", "id", tableId));
+
+        return RestaurantOrderMapper.mapToRestaurantOrderDto(activeOrder);
     }
 
     private List<OrderItem> resolveOrderItems(List<OrderItemDto> itemDtos, RestaurantOrder owningOrder, boolean requireNonEmpty) {
