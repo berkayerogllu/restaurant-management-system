@@ -9,7 +9,8 @@ public class RestaurantTableMapper {
         return new RestaurantTableDto(
                 table.getId(),
                 table.getTableNumber(),
-                table.getCapacity()
+                table.getCapacity(),
+                table.getStatus().name()
         );
     }
 
@@ -18,6 +19,8 @@ public class RestaurantTableMapper {
         table.setId(tableDto.getId());
         table.setTableNumber(tableDto.getTableNumber());
         table.setCapacity(tableDto.getCapacity());
+
+        // status is set and transitioned exclusively by the service layer
         return table;
     }
 }
