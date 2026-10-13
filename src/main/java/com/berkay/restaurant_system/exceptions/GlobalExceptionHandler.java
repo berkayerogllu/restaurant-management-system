@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,6 +14,34 @@ import org.springframework.web.context.request.WebRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // Handle invalid credentials on login
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+            AuthenticationException exception, WebRequest webRequest) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                "Invalid username or password",
+                webRequest.getDescription(false)
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    // Handle requests missing/carrying an invalid bearer token
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException exception, WebRequest webRequest) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                "Access denied",
+                webRequest.getDescription(false)
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
 
     // Handle request body validation failures (@Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)
