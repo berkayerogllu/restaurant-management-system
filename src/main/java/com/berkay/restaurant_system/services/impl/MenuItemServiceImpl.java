@@ -1,8 +1,7 @@
 package com.berkay.restaurant_system.services.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.berkay.restaurant_system.dtos.MenuItemDto;
@@ -22,11 +21,9 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    public List<MenuItemDto> getAllMenuItems() {
-        List<MenuItem> menuItems = menuItemRepository.findAll();
-        return menuItems.stream()
-                .map(MenuItemMapper::mapToMenuItemDto)
-                .collect(Collectors.toList());
+    public Page<MenuItemDto> getAllMenuItems(Pageable pageable) {
+        return menuItemRepository.findAll(pageable)
+                .map(MenuItemMapper::mapToMenuItemDto);
     }
 
     @Override

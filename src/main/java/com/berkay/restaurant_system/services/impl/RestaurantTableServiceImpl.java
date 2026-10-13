@@ -1,8 +1,7 @@
 package com.berkay.restaurant_system.services.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.berkay.restaurant_system.dtos.RestaurantTableDto;
@@ -22,11 +21,9 @@ public class RestaurantTableServiceImpl implements RestaurantTableService {
     }
 
     @Override
-    public List<RestaurantTableDto> getAllTables() {
-        List<RestaurantTable> tables = restaurantTableRepository.findAll();
-        return tables.stream()
-                .map(RestaurantTableMapper::mapToRestaurantTableDto)
-                .collect(Collectors.toList());
+    public Page<RestaurantTableDto> getAllTables(Pageable pageable) {
+        return restaurantTableRepository.findAll(pageable)
+                .map(RestaurantTableMapper::mapToRestaurantTableDto);
     }
 
     @Override
