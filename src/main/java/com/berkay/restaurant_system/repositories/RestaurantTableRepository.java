@@ -12,4 +12,6 @@ import com.berkay.restaurant_system.entities.TableStatus;
 public interface RestaurantTableRepository extends JpaRepository<RestaurantTable, Long> {
 
     Page<RestaurantTable> findByStatus(TableStatus status, Pageable pageable);
+
+    long countByStatus(TableStatus status);
 }
