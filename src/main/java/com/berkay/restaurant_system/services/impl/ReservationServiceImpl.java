@@ -1,8 +1,7 @@
 package com.berkay.restaurant_system.services.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.berkay.restaurant_system.dtos.ReservationDto;
@@ -29,10 +28,9 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public List<ReservationDto> getAllReservations() {
-        return reservationRepository.findAll().stream()
-                .map(ReservationMapper::mapToReservationDto)
-                .collect(Collectors.toList());
+    public Page<ReservationDto> getAllReservations(Pageable pageable) {
+        return reservationRepository.findAll(pageable)
+                .map(ReservationMapper::mapToReservationDto);
     }
 
     @Override

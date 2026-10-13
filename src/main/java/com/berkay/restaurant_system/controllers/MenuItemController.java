@@ -1,7 +1,8 @@
 package com.berkay.restaurant_system.controllers;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,8 +29,9 @@ public class MenuItemController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MenuItemDto>> getAllMenuItems() {
-        return ResponseEntity.ok(menuItemService.getAllMenuItems());
+    public ResponseEntity<Page<MenuItemDto>> getAllMenuItems(
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(menuItemService.getAllMenuItems(pageable));
     }
 
     @GetMapping("/{id}")
