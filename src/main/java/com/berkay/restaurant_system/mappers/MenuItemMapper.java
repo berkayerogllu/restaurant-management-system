@@ -9,7 +9,9 @@ public class MenuItemMapper {
         return new MenuItemDto(
                 menuItem.getId(),
                 menuItem.getName(),
-                menuItem.getPrice()
+                menuItem.getPrice(),
+                menuItem.getCategory().name(),
+                menuItem.isAvailable()
         );
     }
 
@@ -18,6 +20,9 @@ public class MenuItemMapper {
         menuItem.setId(menuItemDto.getId());
         menuItem.setName(menuItemDto.getName());
         menuItem.setPrice(menuItemDto.getPrice());
+
+        // category is parsed and available is defaulted by the service layer,
+        // since invalid values need to be reported as a BadRequestException.
         return menuItem;
     }
 }

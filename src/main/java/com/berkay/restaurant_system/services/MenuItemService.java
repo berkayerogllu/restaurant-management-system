@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import com.berkay.restaurant_system.dtos.MenuItemDto;
 
 public interface MenuItemService {
-    Page<MenuItemDto> getAllMenuItems(Pageable pageable);
+    Page<MenuItemDto> getAllMenuItems(Pageable pageable, String category, Boolean available);
     MenuItemDto getMenuItemById(Long id);
     MenuItemDto addMenuItem(MenuItemDto menuItemDto);
     MenuItemDto updateMenuItem(Long id, MenuItemDto menuItemDto);

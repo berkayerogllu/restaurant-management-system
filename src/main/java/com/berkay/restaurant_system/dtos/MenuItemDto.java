@@ -19,4 +19,10 @@ public class MenuItemDto {
     @NotNull(message = "Price is required")
     @Positive(message = "Price must be greater than zero")
     private Double price;
+
+    @NotBlank(message = "Category is required")
+    private String category;
+
+    // Defaults to true when not provided
+    private Boolean available;
 }

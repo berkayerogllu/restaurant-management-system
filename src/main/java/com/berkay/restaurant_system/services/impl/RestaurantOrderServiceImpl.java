@@ -157,6 +157,14 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
             throw new BadRequestException("One or more menu item ids do not exist: " + menuItemIds);
         }
 
+        List<String> unavailableItemNames = menuItemsById.values().stream()
+                .filter(menuItem -> !menuItem.isAvailable())
+                .map(MenuItem::getName)
+                .collect(Collectors.toList());
+        if (!unavailableItemNames.isEmpty()) {
+            throw new BadRequestException("The following menu items are currently unavailable: " + unavailableItemNames);
+        }
+
         return itemDtos.stream().map(itemDto -> {
             MenuItem menuItem = menuItemsById.get(itemDto.getMenuItemId());
             OrderItem orderItem = new OrderItem();
