@@ -19,4 +19,7 @@ public class RestaurantTableDto {
     @NotNull(message = "Capacity is required")
     @Positive(message = "Capacity must be greater than zero")
     private Integer capacity;
+
+    // Set by the server on creation and only changed through the status transition endpoint
+    private String status;
 }

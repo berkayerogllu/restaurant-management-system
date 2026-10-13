@@ -7,15 +7,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.berkay.restaurant_system.dtos.RestaurantTableDto;
+import com.berkay.restaurant_system.dtos.TableOccupancyLogDto;
+import com.berkay.restaurant_system.dtos.TableStatusUpdateDto;
 import com.berkay.restaurant_system.services.RestaurantTableService;
 
 @RestController
@@ -30,13 +34,26 @@ public class RestaurantTableController {
 
     @GetMapping
     public ResponseEntity<Page<RestaurantTableDto>> getAllTables(
+            @PageableDefault(size = 20) Pageable pageable,
+            @RequestParam(required = false) String status) {
+        return ResponseEntity.ok(restaurantTableService.getAllTables(pageable, status));
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<Page<RestaurantTableDto>> getAvailableTables(
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(restaurantTableService.getAllTables(pageable));
+        return ResponseEntity.ok(restaurantTableService.getAllTables(pageable, "AVAILABLE"));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RestaurantTableDto> getTableById(@PathVariable Long id) {
         return ResponseEntity.ok(restaurantTableService.getTableById(id));
+    }
+
+    @GetMapping("/{id}/occupancy-history")
+    public ResponseEntity<Page<TableOccupancyLogDto>> getOccupancyHistory(@PathVariable Long id,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(restaurantTableService.getOccupancyHistory(id, pageable));
     }
 
     @PostMapping
@@ -47,6 +64,12 @@ public class RestaurantTableController {
     @PutMapping("/{id}")
     public ResponseEntity<RestaurantTableDto> updateTable(@PathVariable Long id, @Valid @RequestBody RestaurantTableDto restaurantTableDto) {
         return ResponseEntity.ok(restaurantTableService.updateTable(id, restaurantTableDto));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<RestaurantTableDto> updateTableStatus(@PathVariable Long id,
+            @Valid @RequestBody TableStatusUpdateDto statusUpdateDto) {
+        return ResponseEntity.ok(restaurantTableService.updateTableStatus(id, statusUpdateDto.getStatus()));
     }
 
     @DeleteMapping("/{id}")
