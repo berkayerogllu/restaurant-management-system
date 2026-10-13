@@ -43,6 +43,10 @@ public class RestaurantOrder {
     @Column
     private String cancellationReason;
 
+    // Snapshot of the seated customer's phone number at order time, for order history lookups
+    @Column
+    private String customerPhone;
+
     @ManyToOne
     @JoinColumn (name = "restaurant_table_id")
     private RestaurantTable restaurantTable;

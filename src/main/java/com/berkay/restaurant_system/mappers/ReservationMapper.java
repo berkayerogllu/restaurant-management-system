@@ -15,7 +15,8 @@ public class ReservationMapper {
                 reservation.getCustomerPhone(),
                 reservation.getStartTime(),
                 reservation.getEndTime(),
-                tableId
+                tableId,
+                reservation.isCheckedIn()
         );
     }
 

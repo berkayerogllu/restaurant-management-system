@@ -20,6 +20,7 @@ import com.berkay.restaurant_system.entities.RestaurantOrder;
 import com.berkay.restaurant_system.exceptions.BadRequestException;
 import com.berkay.restaurant_system.exceptions.ResourceNotFoundException;
 import com.berkay.restaurant_system.mappers.RestaurantOrderMapper;
+import com.berkay.restaurant_system.repositories.CustomerRepository;
 import com.berkay.restaurant_system.repositories.MenuItemRepository;
 import com.berkay.restaurant_system.repositories.RestaurantOrderRepository;
 import com.berkay.restaurant_system.repositories.RestaurantTableRepository;
@@ -43,13 +44,16 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
     private final RestaurantOrderRepository restaurantOrderRepository;
     private final RestaurantTableRepository restaurantTableRepository;
     private final MenuItemRepository menuItemRepository;
+    private final CustomerRepository customerRepository;
 
     public RestaurantOrderServiceImpl(RestaurantOrderRepository restaurantOrderRepository,
             RestaurantTableRepository restaurantTableRepository,
-            MenuItemRepository menuItemRepository) {
+            MenuItemRepository menuItemRepository,
+            CustomerRepository customerRepository) {
         this.restaurantOrderRepository = restaurantOrderRepository;
         this.restaurantTableRepository = restaurantTableRepository;
         this.menuItemRepository = menuItemRepository;
+        this.customerRepository = customerRepository;
     }
 
     @Override
@@ -79,6 +83,8 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
         RestaurantOrder order = RestaurantOrderMapper.mapToRestaurantOrder(orderDto);
         order.setStatus(OrderStatus.RECEIVED);
         order.setCreatedAt(LocalDateTime.now());
+        customerRepository.findByRestaurantTableId(orderDto.getTableId())
+                .ifPresent(seatedCustomer -> order.setCustomerPhone(seatedCustomer.getPhoneNumber()));
 
         List<OrderItem> orderItems = resolveOrderItems(orderDto.getItems(), order, true);
         order.setOrderItems(orderItems);
@@ -173,6 +179,12 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Active order for table", "id", tableId));
 
         return RestaurantOrderMapper.mapToRestaurantOrderDto(activeOrder);
+    }
+
+    @Override
+    public Page<RestaurantOrderDto> getOrderHistoryByPhone(String customerPhone, Pageable pageable) {
+        return restaurantOrderRepository.findByCustomerPhoneOrderByCreatedAtDesc(customerPhone, pageable)
+                .map(RestaurantOrderMapper::mapToRestaurantOrderDto);
     }
 
     private List<OrderItem> resolveOrderItems(List<OrderItemDto> itemDtos, RestaurantOrder owningOrder, boolean requireNonEmpty) {

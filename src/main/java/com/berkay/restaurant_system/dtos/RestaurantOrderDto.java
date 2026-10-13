@@ -26,6 +26,9 @@ public class RestaurantOrderDto {
     // Populated on responses only when the order was cancelled, via the status transition endpoint
     private String cancellationReason;
 
+    // Populated on responses only: the phone number of the customer seated at the table when the order was placed
+    private String customerPhone;
+
     private Long tableId;
 
     @Valid

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.berkay.restaurant_system.dtos.CustomerDto;
 import com.berkay.restaurant_system.dtos.ReservationDto;
 import com.berkay.restaurant_system.services.ReservationService;
 
@@ -40,6 +41,18 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getReservationById(id));
     }
 
+    @GetMapping("/today")
+    public ResponseEntity<Page<ReservationDto>> getTodaysReservations(
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(reservationService.getTodaysReservations(pageable));
+    }
+
+    @GetMapping("/no-show")
+    public ResponseEntity<Page<ReservationDto>> getNoShowReservations(
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(reservationService.getNoShowReservations(pageable));
+    }
+
     @PostMapping
     public ResponseEntity<ReservationDto> addReservation(@Valid @RequestBody ReservationDto reservationDto) {
         return new ResponseEntity<>(reservationService.addReservation(reservationDto), HttpStatus.CREATED);
@@ -49,6 +62,11 @@ public class ReservationController {
     public ResponseEntity<ReservationDto> updateReservation(@PathVariable Long id,
             @Valid @RequestBody ReservationDto reservationDto) {
         return ResponseEntity.ok(reservationService.updateReservation(id, reservationDto));
+    }
+
+    @PostMapping("/{id}/check-in")
+    public ResponseEntity<CustomerDto> checkIn(@PathVariable Long id) {
+        return new ResponseEntity<>(reservationService.checkIn(id), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
