@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,6 +47,13 @@ public class RestaurantOrderController {
     @GetMapping("/kitchen-queue")
     public ResponseEntity<List<RestaurantOrderDto>> getKitchenQueue() {
         return ResponseEntity.ok(restaurantOrderService.getKitchenQueue());
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<Page<RestaurantOrderDto>> getOrderHistory(
+            @RequestParam String phoneNumber,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(restaurantOrderService.getOrderHistoryByPhone(phoneNumber, pageable));
     }
 
     @PostMapping

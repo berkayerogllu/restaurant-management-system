@@ -36,4 +36,7 @@ public class Reservation {
     @ManyToOne
     @JoinColumn(name = "restaurant_table_id", nullable = false)
     private RestaurantTable restaurantTable;
+
+    @Column(nullable = false)
+    private boolean checkedIn;
 }

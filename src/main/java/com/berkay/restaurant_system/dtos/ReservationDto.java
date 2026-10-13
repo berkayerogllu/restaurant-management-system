@@ -28,4 +28,7 @@ public class ReservationDto {
 
     @NotNull(message = "Table id is required")
     private Long tableId;
+
+    // Set by the server, only changed through the check-in endpoint
+    private Boolean checkedIn;
 }

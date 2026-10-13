@@ -20,4 +20,7 @@ public interface RestaurantOrderService {
 
     // The current non-finished order for a table, if any
     RestaurantOrderDto getActiveOrderForTable(Long tableId);
+
+    // Past orders placed by the customer seated at order time, looked up by phone number
+    Page<RestaurantOrderDto> getOrderHistoryByPhone(String customerPhone, Pageable pageable);
 }

@@ -22,6 +22,7 @@ public class RestaurantOrderMapper {
                 order.getTotalPrice(),
                 order.getStatus().name(),
                 order.getCancellationReason(),
+                order.getCustomerPhone(),
                 tableId,
                 items
         );
