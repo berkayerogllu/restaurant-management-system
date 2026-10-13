@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,8 +31,10 @@ public class MenuItemController {
 
     @GetMapping
     public ResponseEntity<Page<MenuItemDto>> getAllMenuItems(
-            @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(menuItemService.getAllMenuItems(pageable));
+            @PageableDefault(size = 20) Pageable pageable,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean available) {
+        return ResponseEntity.ok(menuItemService.getAllMenuItems(pageable, category, available));
     }
 
     @GetMapping("/{id}")
