@@ -2,6 +2,7 @@ package com.berkay.restaurant_system.dtos;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,11 +17,14 @@ public class RestaurantOrderDto {
     @NotBlank(message = "Details are required")
     private String details;
 
+    // Computed by the server from order items, ignored on requests
     private Double totalPrice;
 
-    private Boolean isPaid;
+    // Set by the server on creation and only changed through the status transition endpoint
+    private String status;
 
     private Long tableId;
 
-    private List<Long> menuItemIds;
+    @Valid
+    private List<OrderItemDto> items;
 }

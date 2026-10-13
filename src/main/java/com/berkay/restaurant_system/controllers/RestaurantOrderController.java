@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.berkay.restaurant_system.dtos.OrderStatusUpdateDto;
 import com.berkay.restaurant_system.dtos.RestaurantOrderDto;
 import com.berkay.restaurant_system.services.RestaurantOrderService;
 
@@ -47,6 +49,12 @@ public class RestaurantOrderController {
     @PutMapping("/{id}")
     public ResponseEntity<RestaurantOrderDto> updateOrder(@PathVariable Long id, @Valid @RequestBody RestaurantOrderDto orderDto) {
         return ResponseEntity.ok(restaurantOrderService.updateOrder(id, orderDto));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<RestaurantOrderDto> updateOrderStatus(@PathVariable Long id,
+            @Valid @RequestBody OrderStatusUpdateDto statusUpdateDto) {
+        return ResponseEntity.ok(restaurantOrderService.updateOrderStatus(id, statusUpdateDto.getStatus()));
     }
 
     @DeleteMapping("/{id}")

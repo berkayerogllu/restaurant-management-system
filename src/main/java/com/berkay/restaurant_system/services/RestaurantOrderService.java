@@ -10,5 +10,6 @@ public interface RestaurantOrderService {
     RestaurantOrderDto getOrderById(Long id);
     RestaurantOrderDto addOrder(RestaurantOrderDto orderDto);
     RestaurantOrderDto updateOrder(Long id, RestaurantOrderDto orderDto);
+    RestaurantOrderDto updateOrderStatus(Long id, String newStatus);
     void deleteOrder(Long id);
 }

@@ -1,13 +1,20 @@
 package com.berkay.restaurant_system.services.impl;
 
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.berkay.restaurant_system.dtos.OrderItemDto;
 import com.berkay.restaurant_system.dtos.RestaurantOrderDto;
 import com.berkay.restaurant_system.entities.MenuItem;
+import com.berkay.restaurant_system.entities.OrderItem;
+import com.berkay.restaurant_system.entities.OrderStatus;
 import com.berkay.restaurant_system.entities.RestaurantOrder;
 import com.berkay.restaurant_system.exceptions.BadRequestException;
 import com.berkay.restaurant_system.exceptions.ResourceNotFoundException;
@@ -19,6 +26,18 @@ import com.berkay.restaurant_system.services.RestaurantOrderService;
 
 @Service
 public class RestaurantOrderServiceImpl implements RestaurantOrderService {
+
+    private static final Map<OrderStatus, EnumSet<OrderStatus>> ALLOWED_TRANSITIONS = new EnumMap<>(OrderStatus.class);
+    private static final EnumSet<OrderStatus> ITEM_EDITABLE_STATUSES = EnumSet.of(OrderStatus.RECEIVED, OrderStatus.IN_PREPARATION);
+
+    static {
+        ALLOWED_TRANSITIONS.put(OrderStatus.RECEIVED, EnumSet.of(OrderStatus.IN_PREPARATION, OrderStatus.CANCELLED));
+        ALLOWED_TRANSITIONS.put(OrderStatus.IN_PREPARATION, EnumSet.of(OrderStatus.READY, OrderStatus.CANCELLED));
+        ALLOWED_TRANSITIONS.put(OrderStatus.READY, EnumSet.of(OrderStatus.SERVED, OrderStatus.CANCELLED));
+        ALLOWED_TRANSITIONS.put(OrderStatus.SERVED, EnumSet.of(OrderStatus.PAID));
+        ALLOWED_TRANSITIONS.put(OrderStatus.PAID, EnumSet.noneOf(OrderStatus.class));
+        ALLOWED_TRANSITIONS.put(OrderStatus.CANCELLED, EnumSet.noneOf(OrderStatus.class));
+    }
 
     private final RestaurantOrderRepository restaurantOrderRepository;
     private final RestaurantTableRepository restaurantTableRepository;
@@ -56,11 +75,12 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
             throw new BadRequestException("Assigned table does not exist with id: " + orderDto.getTableId());
         }
 
-        List<MenuItem> menuItems = resolveMenuItems(orderDto.getMenuItemIds(), true);
-
         RestaurantOrder order = RestaurantOrderMapper.mapToRestaurantOrder(orderDto);
-        order.setMenuItems(menuItems);
-        order.setTotalPrice(calculateTotalPrice(menuItems));
+        order.setStatus(OrderStatus.RECEIVED);
+
+        List<OrderItem> orderItems = resolveOrderItems(orderDto.getItems(), order, true);
+        order.setOrderItems(orderItems);
+        order.setTotalPrice(calculateTotalPrice(orderItems));
 
         RestaurantOrder savedOrder = restaurantOrderRepository.save(order);
         return RestaurantOrderMapper.mapToRestaurantOrderDto(savedOrder);
@@ -76,23 +96,42 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
             if (!tableExists) {
                 throw new BadRequestException("Assigned table does not exist with id: " + orderDto.getTableId());
             }
-        }
-
-        RestaurantOrder mappedOrder = RestaurantOrderMapper.mapToRestaurantOrder(orderDto);
-        existingOrder.setDetails(mappedOrder.getDetails());
-        existingOrder.setPaid(mappedOrder.isPaid());
-
-        if (mappedOrder.getRestaurantTable() != null) {
+            RestaurantOrder mappedOrder = RestaurantOrderMapper.mapToRestaurantOrder(orderDto);
             existingOrder.setRestaurantTable(mappedOrder.getRestaurantTable());
         }
 
-        if (orderDto.getMenuItemIds() != null) {
-            List<MenuItem> menuItems = resolveMenuItems(orderDto.getMenuItemIds(), true);
-            existingOrder.setMenuItems(menuItems);
+        existingOrder.setDetails(orderDto.getDetails());
+
+        if (orderDto.getItems() != null) {
+            if (!ITEM_EDITABLE_STATUSES.contains(existingOrder.getStatus())) {
+                throw new BadRequestException(
+                        "Cannot modify items of an order in status " + existingOrder.getStatus() + ".");
+            }
+
+            existingOrder.getOrderItems().clear();
+            List<OrderItem> newItems = resolveOrderItems(orderDto.getItems(), existingOrder, true);
+            existingOrder.getOrderItems().addAll(newItems);
+            existingOrder.setTotalPrice(calculateTotalPrice(existingOrder.getOrderItems()));
         }
 
-        existingOrder.setTotalPrice(calculateTotalPrice(existingOrder.getMenuItems()));
+        RestaurantOrder updatedOrder = restaurantOrderRepository.save(existingOrder);
+        return RestaurantOrderMapper.mapToRestaurantOrderDto(updatedOrder);
+    }
 
+    @Override
+    public RestaurantOrderDto updateOrderStatus(Long id, String newStatusValue) {
+        RestaurantOrder existingOrder = restaurantOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("RestaurantOrder", "id", id));
+
+        OrderStatus newStatus = parseStatus(newStatusValue);
+        OrderStatus currentStatus = existingOrder.getStatus();
+
+        if (!ALLOWED_TRANSITIONS.get(currentStatus).contains(newStatus)) {
+            throw new BadRequestException(
+                    "Cannot transition order from " + currentStatus + " to " + newStatus + ".");
+        }
+
+        existingOrder.setStatus(newStatus);
         RestaurantOrder updatedOrder = restaurantOrderRepository.save(existingOrder);
         return RestaurantOrderMapper.mapToRestaurantOrderDto(updatedOrder);
     }
@@ -105,20 +144,42 @@ public class RestaurantOrderServiceImpl implements RestaurantOrderService {
         restaurantOrderRepository.delete(existingOrder);
     }
 
-    private List<MenuItem> resolveMenuItems(List<Long> menuItemIds, boolean requireNonEmpty) {
-        if (requireNonEmpty && (menuItemIds == null || menuItemIds.isEmpty())) {
-            throw new BadRequestException("Order must contain at least one menu item.");
+    private List<OrderItem> resolveOrderItems(List<OrderItemDto> itemDtos, RestaurantOrder owningOrder, boolean requireNonEmpty) {
+        if (requireNonEmpty && (itemDtos == null || itemDtos.isEmpty())) {
+            throw new BadRequestException("Order must contain at least one item.");
         }
 
-        List<MenuItem> menuItems = menuItemRepository.findAllById(menuItemIds);
-        if (menuItems.size() != menuItemIds.size()) {
+        List<Long> menuItemIds = itemDtos.stream().map(OrderItemDto::getMenuItemId).collect(Collectors.toList());
+        Map<Long, MenuItem> menuItemsById = menuItemRepository.findAllById(menuItemIds).stream()
+                .collect(Collectors.toMap(MenuItem::getId, menuItem -> menuItem));
+
+        if (menuItemsById.size() != menuItemIds.stream().distinct().count()) {
             throw new BadRequestException("One or more menu item ids do not exist: " + menuItemIds);
         }
 
-        return menuItems;
+        return itemDtos.stream().map(itemDto -> {
+            MenuItem menuItem = menuItemsById.get(itemDto.getMenuItemId());
+            OrderItem orderItem = new OrderItem();
+            orderItem.setMenuItem(menuItem);
+            orderItem.setQuantity(itemDto.getQuantity());
+            orderItem.setUnitPriceAtOrderTime(menuItem.getPrice());
+            orderItem.setNote(itemDto.getNote());
+            orderItem.setRestaurantOrder(owningOrder);
+            return orderItem;
+        }).collect(Collectors.toList());
     }
 
-    private double calculateTotalPrice(List<MenuItem> menuItems) {
-        return menuItems.stream().mapToDouble(MenuItem::getPrice).sum();
+    private double calculateTotalPrice(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToDouble(item -> item.getUnitPriceAtOrderTime() * item.getQuantity())
+                .sum();
+    }
+
+    private OrderStatus parseStatus(String value) {
+        try {
+            return OrderStatus.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            throw new BadRequestException("Unknown order status: " + value);
+        }
     }
 }
