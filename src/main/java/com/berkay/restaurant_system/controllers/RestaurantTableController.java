@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,12 +38,12 @@ public class RestaurantTableController {
     }
 
     @PostMapping
-    public ResponseEntity<RestaurantTableDto> addTable(@RequestBody RestaurantTableDto restaurantTableDto) {
+    public ResponseEntity<RestaurantTableDto> addTable(@Valid @RequestBody RestaurantTableDto restaurantTableDto) {
         return new ResponseEntity<>(restaurantTableService.addTable(restaurantTableDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RestaurantTableDto> updateTable(@PathVariable Long id, @RequestBody RestaurantTableDto restaurantTableDto) {
+    public ResponseEntity<RestaurantTableDto> updateTable(@PathVariable Long id, @Valid @RequestBody RestaurantTableDto restaurantTableDto) {
         return ResponseEntity.ok(restaurantTableService.updateTable(id, restaurantTableDto));
     }
 
