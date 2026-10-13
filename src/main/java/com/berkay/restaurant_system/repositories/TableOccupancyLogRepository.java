@@ -1,5 +1,6 @@
 package com.berkay.restaurant_system.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -15,4 +16,6 @@ public interface TableOccupancyLogRepository extends JpaRepository<TableOccupanc
     Page<TableOccupancyLog> findByRestaurantTableIdOrderByOccupiedAtDesc(Long restaurantTableId, Pageable pageable);
 
     Optional<TableOccupancyLog> findByRestaurantTableIdAndFreedAtIsNull(Long restaurantTableId);
+
+    List<TableOccupancyLog> findByFreedAtIsNotNull();
 }
