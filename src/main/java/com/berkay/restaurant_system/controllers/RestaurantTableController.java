@@ -17,9 +17,11 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.berkay.restaurant_system.dtos.RestaurantOrderDto;
 import com.berkay.restaurant_system.dtos.RestaurantTableDto;
 import com.berkay.restaurant_system.dtos.TableOccupancyLogDto;
 import com.berkay.restaurant_system.dtos.TableStatusUpdateDto;
+import com.berkay.restaurant_system.services.RestaurantOrderService;
 import com.berkay.restaurant_system.services.RestaurantTableService;
 
 @RestController
@@ -27,9 +29,12 @@ import com.berkay.restaurant_system.services.RestaurantTableService;
 public class RestaurantTableController {
 
     private final RestaurantTableService restaurantTableService;
+    private final RestaurantOrderService restaurantOrderService;
 
-    public RestaurantTableController(RestaurantTableService restaurantTableService) {
+    public RestaurantTableController(RestaurantTableService restaurantTableService,
+            RestaurantOrderService restaurantOrderService) {
         this.restaurantTableService = restaurantTableService;
+        this.restaurantOrderService = restaurantOrderService;
     }
 
     @GetMapping
@@ -48,6 +53,11 @@ public class RestaurantTableController {
     @GetMapping("/{id}")
     public ResponseEntity<RestaurantTableDto> getTableById(@PathVariable Long id) {
         return ResponseEntity.ok(restaurantTableService.getTableById(id));
+    }
+
+    @GetMapping("/{id}/active-order")
+    public ResponseEntity<RestaurantOrderDto> getActiveOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(restaurantOrderService.getActiveOrderForTable(id));
     }
 
     @GetMapping("/{id}/occupancy-history")

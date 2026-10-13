@@ -1,5 +1,6 @@
 package com.berkay.restaurant_system.entities;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +36,12 @@ public class RestaurantOrder {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column
+    private String cancellationReason;
 
     @ManyToOne
     @JoinColumn (name = "restaurant_table_id")

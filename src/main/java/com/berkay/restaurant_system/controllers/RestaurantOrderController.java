@@ -1,5 +1,7 @@
 package com.berkay.restaurant_system.controllers;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -41,6 +43,11 @@ public class RestaurantOrderController {
         return ResponseEntity.ok(restaurantOrderService.getOrderById(id));
     }
 
+    @GetMapping("/kitchen-queue")
+    public ResponseEntity<List<RestaurantOrderDto>> getKitchenQueue() {
+        return ResponseEntity.ok(restaurantOrderService.getKitchenQueue());
+    }
+
     @PostMapping
     public ResponseEntity<RestaurantOrderDto> addOrder(@Valid @RequestBody RestaurantOrderDto orderDto) {
         return new ResponseEntity<>(restaurantOrderService.addOrder(orderDto), HttpStatus.CREATED);
@@ -54,7 +61,7 @@ public class RestaurantOrderController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<RestaurantOrderDto> updateOrderStatus(@PathVariable Long id,
             @Valid @RequestBody OrderStatusUpdateDto statusUpdateDto) {
-        return ResponseEntity.ok(restaurantOrderService.updateOrderStatus(id, statusUpdateDto.getStatus()));
+        return ResponseEntity.ok(restaurantOrderService.updateOrderStatus(id, statusUpdateDto.getStatus(), statusUpdateDto.getReason()));
     }
 
     @DeleteMapping("/{id}")

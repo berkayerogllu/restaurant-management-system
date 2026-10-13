@@ -12,4 +12,7 @@ public class OrderStatusUpdateDto {
 
     @NotBlank(message = "Status is required")
     private String status;
+
+    // Required when transitioning to CANCELLED, ignored otherwise
+    private String reason;
 }
