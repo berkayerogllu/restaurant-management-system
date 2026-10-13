@@ -48,6 +48,8 @@ public class CustomerServiceImpl implements CustomerService {
             if (!tableExists) {
                 throw new BadRequestException("Assigned table does not exist with id: " + customerDto.getTableId());
             }
+
+            ensureTableIsNotTakenByAnotherCustomer(customerDto.getTableId(), null);
         }
 
         Customer customer = CustomerMapper.mapToCustomer(customerDto);
@@ -65,8 +67,10 @@ public class CustomerServiceImpl implements CustomerService {
             if (!tableExists) {
                 throw new BadRequestException("Assigned table does not exist with id: " + customerDto.getTableId());
             }
+
+            ensureTableIsNotTakenByAnotherCustomer(customerDto.getTableId(), id);
         }
-        
+
         Customer mappedCustomer = CustomerMapper.mapToCustomer(customerDto);
         existingCustomer.setFirstName(mappedCustomer.getFirstName());
         existingCustomer.setLastName(mappedCustomer.getLastName());
@@ -86,5 +90,13 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", id));
                 
         customerRepository.delete(existingCustomer);
+    }
+
+    private void ensureTableIsNotTakenByAnotherCustomer(Long tableId, Long currentCustomerId) {
+        customerRepository.findByRestaurantTableId(tableId).ifPresent(occupant -> {
+            if (!occupant.getId().equals(currentCustomerId)) {
+                throw new BadRequestException("Table with id " + tableId + " is already assigned to another customer.");
+            }
+        });
     }
 }
