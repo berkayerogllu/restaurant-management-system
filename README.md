@@ -1,14 +1,21 @@
 # Restaurant Management System
 
-Restoran yönetimi için geliştirilmiş bir Spring Boot REST API'si: masa, menü, müşteri, sipariş, rezervasyon yönetimi, mutfak ekranı akışı, raporlama/dashboard ve JWT tabanlı kimlik doğrulama içerir.
+Restoran yönetimi için geliştirilmiş full-stack bir uygulama: masa, menü, müşteri, sipariş, rezervasyon yönetimi, mutfak ekranı akışı, raporlama/dashboard, JWT tabanlı kimlik doğrulama ve bunların hepsini kullanan bir React ara yüzü içerir.
 
 ## Teknoloji Yığını
 
+**Backend**
 - Java 21, Spring Boot 4.1.1
 - Spring Data JPA (Hibernate) + PostgreSQL
 - Flyway (veritabanı migration'ları)
 - Spring Security + JWT (kimlik doğrulama)
-- Docker / Docker Compose
+
+**Frontend**
+- React 19 + TypeScript + Vite
+- React Router, Axios
+
+**Altyapı**
+- Docker / Docker Compose (backend + frontend + PostgreSQL, tek komutla ayağa kalkar)
 
 ## Özellikler
 
@@ -20,6 +27,7 @@ Restoran yönetimi için geliştirilmiş bir Spring Boot REST API'si: masa, men�
 - **Dashboard/Raporlama**: ciro (günlük/haftalık/aylık), en çok satan ürünler, saatlik yoğunluk, anlık özet (aktif sipariş, mutfak kuyruğu, masa durumları)
 - **Kimlik doğrulama**: JWT tabanlı, tüm endpoint'ler login gerektirir (tek tip hesap, rol ayrımı yok)
 - **Pagination & sorting**: tüm liste endpoint'lerinde `?page=&size=&sort=`
+- **Ara yüz**: sidebar navigasyon, renk kodlu masa kartları (🟢 boş / 🔴 dolu / 🟣 rezerve / 🔵 temizlikte), sipariş tutarları masa kartlarında anlık görünür
 
 ## Gereksinimler
 
@@ -27,11 +35,14 @@ Restoran yönetimi için geliştirilmiş bir Spring Boot REST API'si: masa, men�
 
 **Veya** lokal çalıştırmak istersen:
 - Java 21 (JDK)
+- Node.js 20+ ve npm
 - PostgreSQL 18 (ya da uyumlu bir sürüm)
 
 ---
 
 ## Hızlı Başlangıç (Docker ile — önerilen)
+
+Bu yöntem backend, frontend ve PostgreSQL'i tek komutla ayağa kaldırır.
 
 ### 1. `.env` dosyasını oluştur
 
@@ -52,6 +63,10 @@ JWT_EXPIRATION_MS=86400000
 
 STAFF_BOOTSTRAP_USERNAME=admin
 STAFF_BOOTSTRAP_PASSWORD=<güçlü bir şifre>
+
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+FRONTEND_PORT=3000
+FRONTEND_API_BASE_URL=http://localhost:8082/api
 ```
 
 > `JWT_SECRET` için rastgele bir değer üretmek istersen: `openssl rand -base64 64`
@@ -62,27 +77,23 @@ STAFF_BOOTSTRAP_PASSWORD=<güçlü bir şifre>
 docker compose up -d --build
 ```
 
-Bu komut:
-- PostgreSQL container'ını başlatır (healthcheck geçene kadar bekler)
-- Uygulamayı derler ve başlatır (`http://localhost:8082`)
-- Flyway migration'larını otomatik uygular
-- Veritabanı boşsa, `.env`'deki bilgilerle ilk admin hesabını otomatik oluşturur
+Bu komut üç servisi başlatır:
 
-### 3. Doğrula
+| Servis | Adres | Açıklama |
+|---|---|---|
+| `postgres` | `localhost:${DB_PORT}` | Veritabanı |
+| `app` | `http://localhost:8082` | Backend API |
+| `frontend` | `http://localhost:3000` | Ara yüz |
 
-```bash
-curl -i http://localhost:8082/api/tables
-```
+İlk açılışta:
+- PostgreSQL container'ı başlar (healthcheck geçene kadar bekler)
+- Backend derlenir ve Flyway migration'larını otomatik uygular
+- Veritabanı boşsa, `.env`'deki bilgilerle ilk admin hesabı otomatik oluşturulur
+- Frontend derlenir ve nginx ile statik olarak servis edilir
 
-`401 Unauthorized` dönmesi beklenen davranıştır — önce login olman gerekiyor:
+### 3. Kullan
 
-```bash
-curl -X POST http://localhost:8082/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"<.env deki STAFF_BOOTSTRAP_PASSWORD>"}'
-```
-
-Dönen `token`'ı sonraki her istekte `Authorization: Bearer <token>` header'ı olarak kullan.
+Tarayıcıda **`http://localhost:3000`** adresine git, `.env`'deki `STAFF_BOOTSTRAP_USERNAME`/`STAFF_BOOTSTRAP_PASSWORD` ile giriş yap.
 
 ### Durdurma
 
@@ -95,30 +106,48 @@ docker compose down -v     # container'ları durdurur VE veritabanını tamamen 
 
 ## Lokal Çalıştırma (Docker'sız)
 
-### 1. PostgreSQL'i hazırla
+### Backend
 
-Yerel bir PostgreSQL instance'ın çalışıyor olmalı. Varsayılan bağlantı `localhost:5434` bekliyor (`application.properties`'teki default'lar).
+1. Yerel bir PostgreSQL instance'ın çalışıyor olmalı (varsayılan: `localhost:5434`).
+2. Proje kökünde `.env.properties` dosyası oluştur:
 
-### 2. `.env.properties` dosyasını oluştur
+   ```env
+   DB_USER=restaurant_admin
+   DB_PASSWORD=<şifren>
 
-Proje kökünde:
+   JWT_SECRET=<rastgele bir string>
+   JWT_EXPIRATION_MS=86400000
 
-```env
-DB_USER=restaurant_admin
-DB_PASSWORD=<şifren>
+   STAFF_BOOTSTRAP_USERNAME=admin
+   STAFF_BOOTSTRAP_PASSWORD=<güçlü bir şifre>
+   ```
 
-JWT_SECRET=<rastgele bir string>
-JWT_EXPIRATION_MS=86400000
+3. Çalıştır:
 
-STAFF_BOOTSTRAP_USERNAME=admin
-STAFF_BOOTSTRAP_PASSWORD=<güçlü bir şifre>
-```
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
-### 3. Çalıştır
+   Backend `http://localhost:8082` üzerinde ayağa kalkar.
 
-```bash
-./mvnw spring-boot:run
-```
+### Frontend
+
+1. `frontend/` klasörüne geç ve bağımlılıkları kur:
+
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. Dev server'ı başlat:
+
+   ```bash
+   npm run dev
+   ```
+
+   Frontend `http://localhost:5173` üzerinde ayağa kalkar ve backend'e `http://localhost:8082/api` adresinden bağlanır (`frontend/.env.development`).
+
+> Backend'in CORS ayarı varsayılan olarak `http://localhost:5173` ve `http://localhost:3000`'e izin verir; farklı bir port kullanıyorsan `CORS_ALLOWED_ORIGINS` değişkenini güncellemen gerekir.
 
 ---
 
@@ -161,17 +190,29 @@ Tüm liste endpoint'leri `?page=0&size=20&sort=alan,asc|desc` destekler.
 ## Proje Yapısı
 
 ```
-src/main/java/com/berkay/restaurant_system/
-├── controllers/   REST endpoint'leri
-├── services/      iş mantığı (interface + impl)
-├── repositories/  Spring Data JPA repository'leri
-├── entities/      JPA entity'leri
-├── dtos/          request/response veri transfer nesneleri
-├── mappers/       entity <-> DTO dönüşümleri
-├── security/      JWT, auth filter, security config
-├── config/        Flyway manuel wiring
-└── exceptions/    global exception handling
-src/main/resources/
-├── application.properties
-└── db/migration/  Flyway migration dosyaları
+restaurant-system/
+├── src/main/java/com/berkay/restaurant_system/
+│   ├── controllers/   REST endpoint'leri
+│   ├── services/      iş mantığı (interface + impl)
+│   ├── repositories/  Spring Data JPA repository'leri
+│   ├── entities/      JPA entity'leri
+│   ├── dtos/          request/response veri transfer nesneleri
+│   ├── mappers/       entity <-> DTO dönüşümleri
+│   ├── security/      JWT, auth filter, security config
+│   ├── config/        Flyway manuel wiring
+│   └── exceptions/    global exception handling
+├── src/main/resources/
+│   ├── application.properties
+│   └── db/migration/  Flyway migration dosyaları
+├── frontend/
+│   ├── src/
+│   │   ├── api/        backend ile konuşan axios istemcileri
+│   │   ├── components/ Layout, ProtectedRoute, StatusBadge
+│   │   ├── context/    AuthContext (JWT token yönetimi)
+│   │   ├── pages/      Dashboard, Tables, Menu, Orders, Reservations, Login
+│   │   └── types/      backend DTO'larıyla birebir eşleşen TS tipleri
+│   ├── Dockerfile       (Node build → nginx serve)
+│   └── nginx.conf
+├── Dockerfile           (backend: Maven build → JRE runtime)
+└── docker-compose.yml   (postgres + app + frontend)
 ```
